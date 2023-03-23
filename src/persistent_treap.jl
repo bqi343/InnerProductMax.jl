@@ -1,11 +1,15 @@
+module PersistentTreap
+
+using InnerProductMax: BstNode
+export TreapNode, TNode, tour, lower_bound, insert, delete, lower_bound, get_last
+
 """
-O(log n) fully-persistent BST
+O(log n)-time and memory fully-persistent BBST
 References:
 - https://en.wikipedia.org/wiki/Treap
 - https://github.com/JuliaCollections/DataStructures.jl/blob/master/src/avl_tree.jl
 - https://github.com/yurivish/Treaps.jl/blob/master/src/Treaps.jl
 """
-
 struct TreapNode{K} <: BstNode{K}
     priority::Int32
     data::K
@@ -15,7 +19,7 @@ struct TreapNode{K} <: BstNode{K}
     TreapNode{K}(priority::Int32, data::K, l::Union{TreapNode{K},Nothing}, r::Union{TreapNode{K},Nothing}) where {K} = new{K}(priority, data, l, r)
 end
 
-const TNode = Union{TreapNode{K},Nothing} where {K};
+const TNode = Union{TreapNode{K},Nothing} where {K}
 
 """Initialize new treap node from old one."""
 function with_children(tnode::TreapNode{K}, l::TNode, r::TNode) where {K}
@@ -75,7 +79,7 @@ function lower_bound(t::TNode, p)
     if t === nothing
         return nothing
     end
-    if is_above(t.data, p)
+    if p < t.data
         ret = lower_bound(t.l, p)
         if ret === nothing
             t.data
@@ -87,10 +91,36 @@ function lower_bound(t::TNode, p)
     end
 end
 
-function last(t::TreapNode{K})::K where {K}
+function get_last(t::TreapNode{K})::K where {K}
     if t.r === nothing
         t.data
     else
-        last(t.r)
+        get_last(t.r)
     end
+end
+
+"""
+Pushes all elements of the binary tree to v
+"""
+function tour(t::TNode{K}, v::Vector{K}) where {K}
+    if t === nothing
+        return
+    end
+    tour(t.l, v)
+    if !isempty(v)
+        @assert v[end] < t.data
+    end
+    push!(v, t.data)
+    tour(t.r, v)
+end
+
+"""
+Returns result of traversing BST from smallest to largest
+"""
+function tour(t::TNode{K}) where {K}
+    v = K[]
+    tour(t, v)
+    v
+end
+
 end

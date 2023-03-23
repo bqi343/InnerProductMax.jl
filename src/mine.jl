@@ -1,11 +1,7 @@
 include("point_location.jl")
 
-export InnerProductMaxMine
-
-function upward(dir::Point3)
-    dir[3] > 0
-end
-
+"""whether vector points in positive z-dir"""
+upward(dir::Point3) = dir[3] > 0
 function extract_2d(dir::Point3{T}) where {T}
     if !upward(dir)
         throw(DomainError("must point upward"))
@@ -14,16 +10,13 @@ function extract_2d(dir::Point3{T}) where {T}
 end
 
 """Answers maximum inner product queries in the upper half-plane."""
-struct UpperDS{T}
-    pl_ds::PointLocationDS{T}
-    function UpperDS(hull::Hull{T}) where {T}
+struct UpperDS{T,P}
+    pl_ds::P
+    function UpperDS{T,P}(hull::Hull{T}) where {T,P}
         # iterate over upward-pointing facets
         augmented_edges = AugmentedEdge{T}[]
 
         function add_two_way_edge(p1::Point2{T}, p2::Point2{T}, a::Int32, b::Int32, duplicated=true)
-            if p1[1] ≈ p2[1]
-                return
-            end
             if !(p1[1] < p2[1])
                 if duplicated
                     return
@@ -32,6 +25,10 @@ struct UpperDS{T}
                     a, b = b, a
                 end
             end
+            if p1[1] ≈ p2[1]
+                return
+            end
+            # println("Adding Two-Way Edge $(p1) $(p2) $(hull.points[:, a]) $(hull.points[:, b])")
             push!(augmented_edges, AugmentedEdge{T}(Segment{T}(p1, p2), hull.points[:, a], hull.points[:, b]))
         end
 
@@ -68,23 +65,21 @@ struct UpperDS{T}
                 end
             end
         end
-        new{T}(PointLocationDS(augmented_edges))
+        new{T,P}(P{T}(augmented_edges))
     end
 end
 
-function query(ds::UpperDS, p::Point2)
-    query(ds.pl_ds, p)
-end
+query(ds::UpperDS{T,P}, p::Point2{T}) where {P,T} = query_pl(ds.pl_ds, p)
 
-struct InnerProductMaxMine{T} <: AbstractInnerProductMax{T}
-    upper::UpperDS{T}
-    lower::UpperDS{T}
-    function InnerProductMaxMine{T}(hull::Hull{T}) where {T}
-        new{T}(UpperDS(hull), UpperDS(negated_copy(hull)))
+struct InnerProductMaxMine{T,P} <: AbstractInnerProductMax{T}
+    upper::UpperDS{T,P}
+    lower::UpperDS{T,P}
+    function InnerProductMaxMine{T,P}(hull::Hull{T}) where {T,P}
+        new{T,P}(UpperDS{T,P}(hull), UpperDS{T,P}(negated_copy(hull)))
     end
 end
 
-function query(ds::InnerProductMaxMine{T}, p::Point3{T}) where {T}
+function query(ds::InnerProductMaxMine{T,P}, p::Point3{T}) where {T,P}
     if p == zeros(3) # if zero, replace with arbitrary point
         p = Point3{T}(0, 0, 1)
     end
@@ -93,10 +88,12 @@ function query(ds::InnerProductMaxMine{T}, p::Point3{T}) where {T}
     if p[3] >= 0
         x, y, z = p
         z = max(z, eps)
+        # println("Query Upper")
         query(ds.upper, Point2{T}(x / z, y / z))
     else
         x, y, z = -p
         z = max(z, eps)
+        # println("Query Lower")
         -query(ds.lower, Point2{T}(x / z, y / z))
     end
 end

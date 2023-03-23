@@ -1,6 +1,6 @@
-using InnerProductMax: TNode, insert, delete, tour
-
 @testset "persistent_treap" begin
+    using InnerProductMax.PersistentTreap
+
     @testset "persistent_treap_insert" begin
         root0::TNode{Int} = nothing
         root1 = insert(root0, 5)

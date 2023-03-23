@@ -42,7 +42,7 @@ struct AugmentedEdge{T}
     vert_above::Point3
 end
 
-is_above(a::AugmentedEdge{T}, p::Point2{T}) where {T} = is_above(a.e, p)
 min_x(a::AugmentedEdge{T}) where {T} = min_x(a.e)
 max_x(a::AugmentedEdge{T}) where {T} = max_x(a.e)
+Base.isless(p::Point2{T}, a::AugmentedEdge{T}) where {T} = is_above(a.e, p)
 Base.isless(a::AugmentedEdge{T}, b::AugmentedEdge{T}) where {T} = a.e < b.e
