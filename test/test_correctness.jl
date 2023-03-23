@@ -8,23 +8,29 @@ function check_keys(keys::Matrix{T}, returned_keys::Matrix{T}) where {T}
 end
 
 """returns: max dot products, query time"""
-function best_answers_and_query_time(ds::AbstractInnerProductMax{T}, keys::Matrix{T}, queries::Matrix{T}) where {T}
-    query_time = @timed(returned_keys = best_vecs(ds, queries)).time
+function best_answers_and_query_info(ds::AbstractInnerProductMax{T}, keys::Matrix{T}, queries::Matrix{T}) where {T}
+    query_info = @timed(begin
+        returned_keys = best_vecs(ds, queries)
+        0
+    end)
     check_keys(keys, returned_keys)
-    dot.(eachcol(returned_keys), eachcol(queries)), query_time
+    dot.(eachcol(returned_keys), eachcol(queries)), query_info
 end
 
 """returns: max dot products, preprocess time, query time"""
-function best_answers_and_times(t::DataType, hull::Hull{T}, keys::Matrix{T}, queries::Matrix{T}) where {T}
-    preprocess_time = @timed(ds = t(hull)).time
-    answers, query_time = best_answers_and_query_time(ds, keys, queries)
-    answers, preprocess_time, query_time
+function best_answers_and_infos(t::DataType, hull::Hull{T}, keys::Matrix{T}, queries::Matrix{T}) where {T}
+    preprocess_info = @timed(begin
+        ds = t(hull)
+        0
+    end)
+    answers, query_info = best_answers_and_query_info(ds, keys, queries)
+    answers, preprocess_info, query_info
 end
 
 function test_point_set(keys::Matrix{T}, values::Matrix{T}, t1::DataType, t2::DataType) where {T<:Real}
     hull = Hull{T}(keys)
-    a1, p1, q1 = best_answers_and_times(t1, hull, keys, values)
-    a2, p2, q2 = best_answers_and_times(t2, hull, keys, values)
+    a1, p1, q1 = best_answers_and_infos(t1, hull, keys, values)
+    a2, p2, q2 = best_answers_and_infos(t2, hull, keys, values)
     @test a1 ≈ a2
     (p1, q1), (p2, q2)
 end
@@ -95,7 +101,7 @@ end
         @test query(ds, P3(1, -2, -3)) == P3(0, 0, 0)
         # end
         # @testset "Best Answers" begin
-        @test best_answers_and_query_time(ds, keys, vec_to_matrix([
+        @test best_answers_and_query_info(ds, keys, vec_to_matrix([
             P3(1, 2, 3),
             P3(-1, -2, -3),
             P3(4, 1, 2),
