@@ -1,0 +1,9 @@
+name = "InnerProductMax"
+uuid = "f9bd24e1-c0cd-4633-976c-8985263c70c0"
+authors = ["Benjamin Qi <bqi343@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+QHull = "a8468747-bd6f-53ef-9e5c-744dbc5c59e7"
