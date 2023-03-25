@@ -28,15 +28,15 @@ function best_answers_and_infos(t::DataType, hull::Hull{T}, keys::Matrix{T}, que
     answers, preprocess_info, query_info
 end
 
-function test_point_set(keys::Matrix{T}, values::Matrix{T}, t1::DataType, t2::DataType) where {T<:Real}
+function test_point_set(keys::Matrix{T}, queries::Matrix{T}, t1::DataType, t2::DataType) where {T<:Real}
     hull = Hull{T}(keys)
-    a1, p1, q1 = best_answers_and_infos(t1, hull, keys, values)
-    a2, p2, q2 = best_answers_and_infos(t2, hull, keys, values)
+    a1, p1, q1 = best_answers_and_infos(t1, hull, keys, queries)
+    a2, p2, q2 = best_answers_and_infos(t2, hull, keys, queries)
     @test a1 ≈ a2
     if !(a1 ≈ a2)
         dif = abs.(a1 - a2)
         amax = argmax(dif)
-        println("failed $(size(keys)) $(keys) $(dif[amax]) $(values[:, amax])}")
+        println("failed test_point_set: size(keys) = $(size(keys)) keys = $(keys) dif = $(dif[amax]) query = $(queries[:, amax])} naive_ans = $(a1[amax]) other_ans = $(a2[amax])")
     end
     (p1, q1), (p2, q2)
 end
@@ -60,15 +60,23 @@ end
         test_point_set(keys, values, t1, t2)
     end
 
+    """test all points in [-1, 0, 1]"""
+    function test_int_tiny(t1::DataType, t2::DataType)
+        d = 1
+        for n in 4:MAX_N
+            for rep in 1:100
+                test_point_set_gen(n -> cube(d, n), n, 1000, t1, t2)
+            end
+        end
+    end
+
     function test_int(t1::DataType, t2::DataType)
         for n in 4:MAX_N
-            # println("n = ", n)
             for d in 1:100
                 for rep in 1:3
                     test_point_set_gen(n -> cube(d, n), n, 1000, t1, t2)
                 end
             end
-            # println("done")
         end
     end
 
@@ -132,8 +140,16 @@ end
         sanity_check(InnerProductMaxMine{Float64,PointLocationDsRB})
     end
 
-    @testset "sanity_check_classic" begin
-        sanity_check(InnerProductMaxClassic{Float64})
+    @testset "sanity_check_nesting" begin
+        sanity_check(InnerProductMaxNested{Float64})
+    end
+
+    @testset "tiny_treap" begin
+        test_int_tiny(InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsTreap})
+    end
+
+    @testset "tiny_nesting" begin
+        test_int_tiny(InnerProductMaxNaive{Float64}, InnerProductMaxNested{Float64})
     end
 
     @testset "small_naive" begin
@@ -148,17 +164,30 @@ end
         test_all_small(InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsRB})
     end
 
-    @testset "tricky_treap" begin
-        test_point_set([-1.0 -4.0 -3.0 0.0; -4.0 3.0 2.0 -3.0; 1.0 -4.0 -4.0 -4.0], hcat([0.0, 1.0, -1.0]),
-            InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsTreap})
+    @testset "small_nesting" begin
+        test_all_small(InnerProductMaxNaive{Float64}, InnerProductMaxNested{Float64})
     end
 
-    @testset "tricky_rb" begin
+    @testset "tricky_rb" begin # -0. vs 0.
         test_point_set([-1.0 -4.0 -3.0 0.0; -4.0 3.0 2.0 -3.0; 1.0 -4.0 -4.0 -4.0], hcat([0.0, 1.0, -1.0]),
             InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsRB})
     end
 
-    @testset "classic" begin
-        test_all_small(InnerProductMaxNaive{Float64}, InnerProductMaxClassic{Float64})
+    @testset "tricky_tiny" begin # -0. vs 0.
+        test_point_set([1.0 1.0 -1.0 1.0; -1.0 1.0 0.0 0.0; 1.0 0.0 1.0 1.0], hcat([1.0, -1.0, 1.0]),
+            InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsTreap})
+    end
+
+    @testset "tricky_treap" begin # parallel rays
+        test_point_set([-1.0 -4.0 -3.0 0.0; -4.0 3.0 2.0 -3.0; 1.0 -4.0 -4.0 -4.0], hcat([0.0, 1.0, -1.0]),
+            InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsTreap})
+    end
+
+    @testset "tricky_nesting" begin
+        for it in 1:100
+            println(it)
+            test_point_set([-1.0 1.0 0.0 0.0 -1.0 -1.0; 0.0 1.0 -1.0 -1.0 1.0 0.0; 0.0 1.0 1.0 -1.0 0.0 1.0], hcat([0.0, -1.0, 1.0]),
+            InnerProductMaxNaive{Float64}, InnerProductMaxNested{Float64})
+        end
     end
 end

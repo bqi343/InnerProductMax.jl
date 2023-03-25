@@ -96,3 +96,19 @@ Note: We can significantly reduce the constant factor for queries using an optim
 12  100000  100000                                     Naive{Float64}          0.001890             8.800208       21.455233
 13  100000  100000  Mine{Float64, InnerProductMax.PLRB.PointLocati...          3.934218           793.702672        0.554677
 ```
+
+Level Nesting:
+
+```
+       N      Q           Method  Preproc Time (s)  Preproc Memory (MB)  Query Time (s)
+0   1000   1000   Naive{Float64}          0.123188            21.083010        0.001706
+1   1000   1000  Nested{Float64}          2.606700           210.646009        0.295431
+2   2000   2000   Naive{Float64}          0.000084             0.176208        0.009147
+3   2000   2000  Nested{Float64}          1.308404            67.983136        0.170769
+4   5000   5000   Naive{Float64}          0.000200             0.440208        0.059044
+5   5000   5000  Nested{Float64}          3.226397           201.209808        0.727922
+6  10000  10000   Naive{Float64}          0.000579             0.880208        0.194339
+7  10000  10000  Nested{Float64}          7.278815           512.164288        1.641210
+8  20000  20000   Naive{Float64}          0.001400             1.760208        0.828003
+9  20000  20000  Nested{Float64}         14.881884          1451.676352        4.268223
+```

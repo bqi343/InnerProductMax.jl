@@ -18,7 +18,9 @@ struct PointLocationDsTreap{T} <: PointLocationDs{T}
         # println("PointLocationDsTreap")
         # println(edges)
         events = Tuple{T,Int,AugmentedEdge{T}}[]
+        # println("Init")
         for e in edges
+            # println(e.e, " ", e.vert_below, " ", e.vert_above, " ", min_x(e), " ", max_x(e))
             push!(events, (min_x(e), 1, e))
             push!(events, (max_x(e), -1, e))
         end
@@ -57,8 +59,10 @@ struct PointLocationDsTreap{T} <: PointLocationDs{T}
         # println("----")
         while i <= length(events)
             j = i
+            # println("Processing ", events[i][1])
             # println("Event ", events[j][1])
             while i <= length(events) && events[i][1] == events[j][1]
+                # println("Event ", events[i])
                 if events[i][2] == -1
                     root = delete(root, events[i][3])
                 else

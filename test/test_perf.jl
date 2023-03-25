@@ -38,3 +38,10 @@ end
     df = sphere_perf(InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsRB}, nqs)
     println(df)
 end
+
+@testset "sphere_perf_nested" begin
+    Random.seed!(1234)
+    nqs = [(n, n) for n in Int.([1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5])][1:end-2]
+    df = sphere_perf(InnerProductMaxNaive{Float64}, InnerProductMaxNested{Float64}, nqs)
+    println(df)
+end

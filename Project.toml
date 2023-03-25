@@ -4,8 +4,8 @@ authors = ["Benjamin Qi <bqi343@gmail.com>"]
 version = "0.1.0"
 
 [deps]
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Pandas = "eadc2687-ae89-51f9-a5d9-86b5a6373a9c"
 QHull = "a8468747-bd6f-53ef-9e5c-744dbc5c59e7"
-StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"

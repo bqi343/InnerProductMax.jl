@@ -1,6 +1,7 @@
-using QHull
-
 export Hull, negated_copy
+
+using QHull
+const V_id = Int32
 
 """
 ensures all faces point outwards, in-place
@@ -16,16 +17,16 @@ end
 
 struct Hull{T<:Real}
     points::Matrix{T}
-    vertices::Vector{Int32}
-    simplices::Matrix{Int32}
+    vertices::Vector{V_id}
+    simplices::Matrix{V_id}
     facets::Matrix{T}
-    adj_simplices::Matrix{Int32}
-    Hull{T}(p::Matrix{T}, v::Vector{Int32}, s::Matrix{Int32}, f::Matrix{T}, a::Matrix{Int32}) where T = new{T}(p, v, s, f, a)
+    adj_simplices::Matrix{V_id}
+    Hull{T}(p::Matrix{T}, v::Vector{V_id}, s::Matrix{V_id}, f::Matrix{T}, a::Matrix{V_id}) where T = new{T}(p, v, s, f, a)
     """points: 3xn"""
     function Hull{T}(points::Matrix{T}) where {T}
         hull = chull(Matrix{T}(transpose(points)))
         orient_faces!(hull)
-        d = Dict{Tuple{Int32,Int32},Int}()
+        d = Dict{Tuple{V_id,V_id},Int}()
         function associate(t, val)
             @assert !haskey(d, t)
             d[t] = val
@@ -35,7 +36,7 @@ struct Hull{T<:Real}
             associate((b, c), i)
             associate((c, a), i)
         end
-        adj = zeros(Int32, 3, size(hull.simplices, 1))
+        adj = zeros(V_id, 3, size(hull.simplices, 1))
         for (i, (a, b, c)) in enumerate(eachrow(hull.simplices))
             adj[:, i] = [d[(b, a)], d[(c, b)], d[(a, c)]]
         end

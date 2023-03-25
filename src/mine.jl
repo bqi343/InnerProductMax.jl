@@ -16,29 +16,32 @@ struct UpperDS{T,P}
         # iterate over upward-pointing facets
         augmented_edges = AugmentedEdge{T}[]
 
-        function add_two_way_edge(p1::Point2{T}, p2::Point2{T}, a::Int32, b::Int32, duplicated=true)
-            if !(p1[1] < p2[1])
-                if duplicated
-                    return
-                else
-                    p1, p2 = p2, p1
-                    a, b = b, a
-                end
-            end
-            if p1[1] ≈ p2[1]
+        function add_two_way_edge(p1::Point2{T}, p2::Point2{T}, a::V_id, b::V_id)
+            if !(p1[1] < p2[1]) || p1[1] ≈ p2[1]
                 return
             end
             # println("Adding Two-Way Edge $(p1) $(p2) $(hull.points[:, a]) $(hull.points[:, b])")
-            push!(augmented_edges, AugmentedEdge{T}(Segment{T}(p1, p2), hull.points[:, a], hull.points[:, b]))
+            s = Segment{T}(p1, p2)
+            # println("Seg ", s)
+            push!(augmented_edges, AugmentedEdge{T}(s, hull.points[:, a], hull.points[:, b]))
         end
 
-        function add_one_way_edge(p1::Point3, p2::Point3, a::Int32, b::Int32)
+        function add_one_way_edge(p1::Point3, p2::Point3, a::V_id, b::V_id)
+            # println("One Way ", p1, " ", p2)
             @assert upward(p1) && !upward(p2)
             point_at_infinity = p1[3] * p2 - p2[3] * p1
             point_at_infinity = point_at_infinity ./ norm(point_at_infinity)
             @assert point_at_infinity[3] ≈ 0
-            point_at_infinity = Point3(point_at_infinity[1:2]..., 1e-12) # TODO: adjust?
-            add_two_way_edge(extract_2d(p1), extract_2d(point_at_infinity), a, b, false)
+            dir = point_at_infinity[1:2]
+            dir = normalized(dir)
+            if dir[1] ≈ 0
+                return
+            elseif dir[1] < 0
+                a, b = b, a
+            end
+            r = Ray{T}(extract_2d(p1), Point2{T}(dir))
+            # println("Ray ", r)
+            push!(augmented_edges, AugmentedEdge{T}(r, hull.points[:, a], hull.points[:, b]))
         end
 
         for i in 1:size(hull.simplices, 2)
@@ -51,7 +54,7 @@ struct UpperDS{T,P}
                 # println(extract_2d(cur_facet))
                 for j in 1:3
                     a = hull.simplices[j, i]
-                    b = hull.simplices[rem(j, 3)+1, i]
+                    b = hull.simplices[mod1(j + 1, 3), i]
                     # println("considering edge ", hull.points[:, a], " ", hull.points[:, b])
                     adj_simplex = hull.adj_simplices[j, i]
                     adj_facet = Point3(hull.facets[1:3, adj_simplex])
@@ -71,6 +74,11 @@ end
 
 query(ds::UpperDS{T,P}, p::Point2{T}) where {P,T} = query_pl(ds.pl_ds, p)
 
+"""
+Preproc Time: O(n log n)
+Preproc Mem: O(n) if red-black tree, O(n log n) if treap
+Query Time: O(log n)
+"""
 struct InnerProductMaxMine{T,P} <: AbstractInnerProductMax{T}
     upper::UpperDS{T,P}
     lower::UpperDS{T,P}
@@ -79,12 +87,11 @@ struct InnerProductMaxMine{T,P} <: AbstractInnerProductMax{T}
     end
 end
 
-function query(ds::InnerProductMaxMine{T,P}, p::Point3{T}) where {T,P}
+function query(ds::InnerProductMaxMine{T,P}, p::Point3{T}, eps::T=1e-9) where {T,P}
     if p == zeros(3) # if zero, replace with arbitrary point
         p = Point3{T}(0, 0, 1)
     end
-    p = p ./ norm(p)
-    eps = 1e-6
+    p = normalized(p)
     if p[3] >= 0
         x, y, z = p
         z = max(z, eps)

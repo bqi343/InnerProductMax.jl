@@ -3,7 +3,9 @@ using GeometryBasics
 
 export InnerProductMaxNaive, query
 
-"""O(N)-time queries"""
+"""Preproc Time: O(N)
+Preproc Mem: O(N)
+Query Time: O(N)"""
 struct InnerProductMaxNaive{T} <: AbstractInnerProductMax{T}
     points::Vector{Point3{T}}
     function InnerProductMaxNaive{T}(hull::Hull{T}) where {T}

@@ -27,7 +27,7 @@ function cube(d::Int, n::Int)
     end
     while true
         points = Float64.(rand(-d:d, (3, n)))
-        if num_indep(points) >= 4
+        if length(compute_span(points)) >= 4
             return points
         end
     end

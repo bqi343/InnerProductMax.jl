@@ -17,7 +17,7 @@ function best_vecs(ds::AbstractInnerProductMax{T}, queries::Matrix{T}) where {T}
 end
 
 include("naive.jl")
-include("classic.jl")
+include("nesting.jl")
 include("mine.jl")
 
 end # module InnerProductMax
