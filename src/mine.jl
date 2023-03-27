@@ -47,22 +47,14 @@ struct UpperDS{T,P}
         for i in 1:size(hull.simplices, 2)
             cur_facet = Point3(hull.facets[1:3, i])
             if upward(cur_facet)
-                # println("Found Facet")
-                # println(hull.points[:, hull.simplices[1, i]])
-                # println(hull.points[:, hull.simplices[2, i]])
-                # println(hull.points[:, hull.simplices[3, i]])
-                # println(extract_2d(cur_facet))
                 for j in 1:3
                     a = hull.simplices[j, i]
                     b = hull.simplices[mod1(j + 1, 3), i]
-                    # println("considering edge ", hull.points[:, a], " ", hull.points[:, b])
                     adj_simplex = hull.adj_simplices[j, i]
                     adj_facet = Point3(hull.facets[1:3, adj_simplex])
                     if upward(adj_facet)
-                        # println("adj is upward")
                         add_two_way_edge(extract_2d(cur_facet), extract_2d(adj_facet), a, b)
                     else
-                        # println("adj is downward")
                         add_one_way_edge(cur_facet, adj_facet, a, b)
                     end
                 end

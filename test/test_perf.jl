@@ -5,7 +5,7 @@ function sphere_perf(t1::DataType, t2::DataType, nqs::Vector{Tuple{Int,Int}})
     N, Q, method, p_time, p_bytes, q_time = [], [], [], [], [], []
     for (n, q) in nqs
         function add_row(t, pi, qi)
-            cmethod = string(t)[length("InnerProductMax")+1:end]
+            cmethod = string(t)[length("InnerProductMax.InnerProductMax")+1:end]
             mb = pi.bytes * 1e-6
             push!(N, n)
             push!(Q, q)
@@ -42,7 +42,13 @@ end
 @testset "sphere_perf_nested" begin
     Random.seed!(1234)
     nqs = [(n, n) for n in Int.([1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5])]
-    # nqs = [(n, n) for n in Int.([1e4])]
     df = sphere_perf(InnerProductMaxNaive{T}, InnerProductMaxNested{T}, nqs)
+    println(df)
+end
+
+@testset "sphere_perf_2e4" begin
+    Random.seed!(1234)
+    nqs = [(n, n) for n in Int.([5e4])]
+    df = sphere_perf(InnerProductMaxNaive{T}, InnerProductMaxMine{T, PointLocationDsRB}, nqs)
     println(df)
 end

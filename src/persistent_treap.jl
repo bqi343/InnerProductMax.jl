@@ -1,6 +1,7 @@
 module PersistentTreap
 
 using InnerProductMax: BstNode
+using GeometryBasics: Point2
 export TreapNode, TNode, tour, lower_bound, insert, delete, lower_bound, get_last
 
 """
@@ -22,14 +23,14 @@ end
 const TNode = Union{TreapNode{K},Nothing} where {K}
 
 """Initialize new treap node from old one."""
-function with_children(tnode::TreapNode{K}, l::TNode, r::TNode) where {K}
+function with_children(tnode::TreapNode{K}, l::TNode{K}, r::TNode{K}) where {K}
     TreapNode{K}(tnode.priority, tnode.data, l, r)
 end
 
 """
 splits t such that values >= d go to right
 """
-function split(t::TNode, d::K)::Tuple{TNode,TNode} where {K}
+function split(t::TNode{K}, d::K) where {K}
     if t === nothing
         return t, t
     end
@@ -56,7 +57,7 @@ function merge(l::TNode{K}, r::TNode{K}) where {K}
     end
 end
 
-function delete(t::TNode, d::K) where {K}
+function delete(t::TNode{K}, d::K) where {K}
     if t === nothing
         throw(DomainError("key not in treap"))
     end
@@ -69,13 +70,13 @@ function delete(t::TNode, d::K) where {K}
     end
 end
 
-function insert(t::TNode, d::K) where {K}
+function insert(t::TNode{K}, d::K) where {K}
     l, r = split(t, d)
     merge(merge(l, TreapNode{K}(d)), r)
 end
 
 """returns first data greater than p"""
-function lower_bound(t::TNode, p)
+function lower_bound(t::TNode{K}, p::Point2{T}) where {K,T}
     if t === nothing
         return nothing
     end

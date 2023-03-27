@@ -19,10 +19,8 @@ function best_answers_and_query_info(ds::AbstractInnerProductMax{T}, keys::Matri
 end
 
 """returns: max dot products, preprocess time, query time"""
-function best_answers_and_infos(t::DataType, hull::Hull{T}, keys::Matrix{T}, queries::Matrix{T}, profile::Bool=false) where {T}
-    # @profview ds = t(hull)
-    # @assert false
-    if t == InnerProductMax.InnerProductMaxNested{T} && profile
+function best_answers_and_infos(t::DataType, hull::Hull{T}, keys::Matrix{T}, queries::Matrix{T}, profile::Bool=true) where {T}
+    if t == InnerProductMaxMine{T,PointLocationDsRB} && false
         @profview preprocess_info = @timed(begin
             ds = t(hull)
             0
@@ -33,15 +31,13 @@ function best_answers_and_infos(t::DataType, hull::Hull{T}, keys::Matrix{T}, que
             0
         end)
     end
-    # if t == InnerProductMax.InnerProductMaxNested{T} && profile
-    #     # println("best_answers ", t)
-    #     answers, query_info = best_answers_and_query_info(ds, keys, queries)
-    #     # Profile.print()
-    #     answers, preprocess_info, query_info
-    # else
-    answers, query_info = best_answers_and_query_info(ds, keys, queries)
-    answers, preprocess_info, query_info
-    # end
+    if t == InnerProductMaxMine{T,PointLocationDsRB} && false
+        @profview answers, query_info = best_answers_and_query_info(ds, keys, queries)
+        answers, preprocess_info, query_info
+    else
+        answers, query_info = best_answers_and_query_info(ds, keys, queries)
+        answers, preprocess_info, query_info
+    end
 end
 
 function test_point_set(keys::Matrix{T}, queries::Matrix{T}, t1::DataType, t2::DataType) where {T<:Real}

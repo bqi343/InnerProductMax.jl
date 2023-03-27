@@ -1,12 +1,13 @@
 module PersistentRB
 
 using InnerProductMax: BstNode
+using GeometryBasics
 
 export RedBlackNode, RBNode, insert_root, delete_root, tour, lower_bound, get_colors, get_last
 
-operations = 0
-rotations = 0
-allocations = 0
+operations::Int = 0
+rotations::Int = 0
+allocations::Int = 0
 
 """
 O(log n)-time, O(1) amortized memory partially-persistent BBST
@@ -54,13 +55,8 @@ function get_c_latest(t::RedBlackNode{T,K}, dir::Int) where {T,K}
     end
 end
 """returns children as list"""
-function get_children_latest(t::RedBlackNode{T,K}) where {T,K}
-    RBNode{T,K}[get_c_latest(t, 1), get_c_latest(t, 2)]
-end
-
-function any_red_children(t::RedBlackNode{T,K}) where {T,K}
-    any(is_red(get_c_latest(t, i)) for i in 1:2)
-end
+get_children_latest(t::RedBlackNode{T,K}) where {T,K} = get_c_latest(t, 1), get_c_latest(t, 2)
+any_red_children(t::RedBlackNode{T,K}) where {T,K} = any(is_red(get_c_latest(t, i)) for i in 1:2)
 
 """returns t or a copy of t with the specified child"""
 function with_child(t::RedBlackNode{T,K}, dir::Int, time::T, c::RBNode{T,K}) where {T,K}
@@ -74,13 +70,20 @@ function with_child(t::RedBlackNode{T,K}, dir::Int, time::T, c::RBNode{T,K}) whe
         return t
     end
     new_c = get_children_latest(t)
-    new_c[dir] = c
-    RedBlackNode{T,K}(t.data, Tuple(new_c), t.red)
+    RedBlackNode{T,K}(t.data, (if dir == 1
+                c
+            else
+                new_c[1]
+            end, if dir == 2
+                c
+            else
+                new_c[2]
+            end), t.red)
 end
 
 """returns a copy of t with new data"""
 function with_new_data(t::RedBlackNode{T,K}, new_data::K) where {T,K}
-    RedBlackNode{T,K}(new_data, Tuple(get_children_latest(t)), t.red)
+    RedBlackNode{T,K}(new_data, get_children_latest(t), t.red)
 end
 
 """persistently rotate up child of t in direction dir"""
@@ -132,7 +135,7 @@ function insert_int(t::RBNode{T,K}, time::T, d::K) where {T,K}
     return t
 end
 
-function insert_root(t::RBNode{T,K}, time::T, d::K) where {T,K}
+function insert_root(t::RBNode{T,K}, time::T, d::K)::RedBlackNode{T,K} where {T,K}
     global operations += 1
     t = insert_int(t, time, d)
     t.red = false # figure 4 case (b): root is always black
@@ -221,9 +224,9 @@ function delete_int(t::RedBlackNode{T,K}, time::T, d::K) where {T,K}
             c_other = get_c_latest(t, 2)
             if is_red(c_other) # not explicitly described?
                 c_other.red = false
-                return (c_other, false)
+                return c_other, false
             end
-            return (c_other, !t.red)
+            return c_other, !t.red
         end
         dir = 1
         (c, is_short, new_data) = delete_rightmost(c, time)
@@ -233,7 +236,7 @@ function delete_int(t::RedBlackNode{T,K}, time::T, d::K) where {T,K}
     end
     t = with_child(t, dir, time, c)
     if !is_short
-        return (t, false)
+        return t, false
     end
     delete_fixup(t, dir, time)
 end
@@ -248,7 +251,7 @@ function delete_root(t::RedBlackNode{T,K}, time::T, d::K) where {T,K}
     res[1]
 end
 
-function lower_bound(t::RBNode, p)
+function lower_bound(t::RBNode{T,K}, p::Point2{T}) where {T,K}
     ret = nothing
     while t !== nothing
         if p < t.data

@@ -165,7 +165,6 @@ Level Nesting:
 
 ## TODOs
 
- - do more profiling
  - remove Dict from subhull? idk if that will be faster
  - polish docs + performance tests
  - generate more interesting point distributions?

@@ -7,7 +7,8 @@ export PointLocationDsRB
 
 using InnerProductMax: PointLocationDs, AugmentedEdge, min_x, max_x
 using InnerProductMax.PersistentRB, GeometryBasics
-RBNodeEdge = RBNode{T,AugmentedEdge{T}} where {T}
+
+RBNodeEdge{T} = RBNode{T,AugmentedEdge{T}}
 
 """
 Point Location Data Structure on 2D Mesh, using red-black tree
@@ -29,27 +30,15 @@ struct PointLocationDsRB{T} <: PointLocationDs{T}
         end) # see https://discourse.julialang.org/t/negative-zeros-and-sorting/85252
         i = 1
         root::RBNodeEdge{T} = nothing
-        roots = Tuple{T,RBNodeEdge}[(-Inf64, root)]
-        # println("START")
+        roots = Tuple{T,RBNodeEdge{T}}[(-Inf, root)]
         while i <= length(events)
             j = i
-            # println("OOP ", events[i][1])
             while i <= length(events) && events[i][1] == events[j][1]
-                # println("GOT ", events[i][1], " ", events[i][2], " ", events[i][3])
                 if events[i][2] == -1
-                    # println("DEL")
                     root = delete_root(root, events[i][1], events[i][3])
                 else
-                    # println("INS")
                     root = insert_root(root, events[i][1], events[i][3])
                 end
-                # println("CHECKING")
-                # if root !== nothing
-                #     println(get_colors(root))
-                #     tour(root, events[j][1], true)
-                # else
-                #     println("NO ROOT")
-                # end
                 i += 1
             end
             if isempty(roots) || roots[end][2] !== root # optimization: root doesn't change that often
