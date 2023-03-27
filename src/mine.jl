@@ -70,6 +70,9 @@ query(ds::UpperDS{T,P}, p::Point2{T}) where {P,T} = query_pl(ds.pl_ds, p)
 Preproc Time: O(n log n)
 Preproc Mem: O(n) if red-black tree, O(n log n) if treap
 Query Time: O(log n)
+
+Reference for persistent red-black tree:
+ - Sarnak, Neil, and Robert E. Tarjan. "Planar point location using persistent search trees." Communications of the ACM 29.7 (1986): 669-679.
 """
 struct InnerProductMaxMine{T,P} <: AbstractInnerProductMax{T}
     upper::UpperDS{T,P}

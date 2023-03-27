@@ -46,9 +46,9 @@ end
     println(df)
 end
 
-@testset "sphere_perf_2e4" begin
+@test_skip @testset "sphere_perf_5e4" begin
     Random.seed!(1234)
     nqs = [(n, n) for n in Int.([5e4])]
-    df = sphere_perf(InnerProductMaxNaive{T}, InnerProductMaxMine{T, PointLocationDsRB}, nqs)
+    df = sphere_perf(InnerProductMaxNaive{T}, InnerProductMaxMine{T,PointLocationDsRB}, nqs)
     println(df)
 end

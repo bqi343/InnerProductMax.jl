@@ -9,9 +9,9 @@ Preproc Time: O(n)
 Preproc Mem: O(n)
 Query Time: O(log n)
 
-References: Edelsbrunner  & Maurer  (1985); 
-Edelsbrunner (1987, Section 9.5.3); 
-Computational Geometry in C 7.10.5
+References: 
+ - Edelsbrunner, Herbert, and Hermann A. Maurer. "Finding extreme points in three dimensions and solving the post-office problem in the plane." Information processing letters 21.1 (1985): 39-47.
+ - o'Rourke, Joseph. Computational geometry in C. Cambridge university press, 1998.
 """
 struct InnerProductMaxNested{T} <: AbstractInnerProductMax{T}
     levels::Vector{NestedLevel{T}}

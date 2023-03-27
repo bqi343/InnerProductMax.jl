@@ -4,16 +4,10 @@ authors = ["Benjamin Qi <bqi343@gmail.com>"]
 version = "0.1.0"
 
 [deps]
-CDDLib = "3391f64e-dcde-5f30-b752-e11513730f60"
-Cthulhu = "f68482b8-f384-11e8-15f7-abe071a5a75f"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 LazySets = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-MeshCat = "283c5d60-a78f-5afe-a0af-af636b173e11"
-Pandas = "eadc2687-ae89-51f9-a5d9-86b5a6373a9c"
 Polyhedra = "67491407-f73d-577b-9b50-8179a7c68029"
-Profile = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
-ProfileView = "c46f51b8-102a-5cf2-8d2c-8597cb0e0da7"
 QHull = "a8468747-bd6f-53ef-9e5c-744dbc5c59e7"

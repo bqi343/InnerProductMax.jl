@@ -56,11 +56,14 @@ In practice, for a hull of size $N\approx 10^5$, `InnerProductMaxMine{T,PointLoc
 
 ## Dev Instructions
 
-Add these to `startup.jl`: `using Revise, ReTest`. Run these commands from the repo root to execute all tests:
+Add these to `startup.jl`: `using Revise, ReTest, TestEnv`. Run these commands from the repo root to execute all tests:
 
 ```
 julia --project
-include("test/InnerProductMaxTests.jl"); retest()
+TestEnv.activate() do
+    include("test/InnerProductMaxTests.jl"); retest()
+    retest()
+end
 ```
 
 ## Performance Tests 
