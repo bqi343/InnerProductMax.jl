@@ -2,7 +2,7 @@
     using InnerProductMax.PersistentRB
 
     @testset "persistent_rb_insert_root" begin
-        root0::RBNode{Float64,Int} = nothing
+        root0::RBNode{T,Int} = nothing
         root1 = insert_root(root0, 1.0, 5)
         @test InnerProductMax.PersistentRB.tour(root1, 1.0, true) == [5]
         root2 = insert_root(root1, 2.0, 3)
@@ -18,7 +18,7 @@
     end
 
     @testset "persistent_rb_delete_root" begin
-        root::RBNode{Float64,Int} = nothing
+        root::RBNode{T,Int} = nothing
         root = insert_root(root, 1.0, 5)
         root = insert_root(root, 2.0, 4)
         root = insert_root(root, 3.0, 3)

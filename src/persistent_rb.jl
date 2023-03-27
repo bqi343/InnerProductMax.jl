@@ -23,10 +23,10 @@ mutable struct RedBlackNode{T<:Real,K} <: BstNode{K}
     extra_dir::Int
     extra_c::Union{RedBlackNode{T,K},Nothing}
     function RedBlackNode{T,K}(d::K, c::Tuple{Union{RedBlackNode{T,K},Nothing},Union{RedBlackNode{T,K},Nothing}}, red::Bool) where {T,K}
-        global allocations += 1
-        if allocations % 100000 == 0
-            println("ops = $operations rotations = $rotations allocations = $allocations")
-        end
+        # global allocations += 1
+        # if allocations % 100000 == 0
+        #     println("RedBlackNode: ops = $operations rotations = $rotations allocations = $allocations")
+        # end
         new{T,K}(d, c, red, Inf, 0, nothing)
     end
     RedBlackNode{T,K}(d::K) where {T,K} = RedBlackNode{T,K}(d, (nothing, nothing), true)

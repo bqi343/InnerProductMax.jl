@@ -3,7 +3,6 @@ using InnerProductMax: Segment, Ray, get_y_coord, min_x, max_x, normalized
 
 @testset "edge" begin
     @testset "segment" begin
-        T = Float64
         s = Segment{T}(Point2{T}(3, 4), Point2{T}(5, 5))
         @test get_y_coord(s, 6.0) ≈ 5.5
         @test min_x(s) == 3
@@ -11,7 +10,6 @@ using InnerProductMax: Segment, Ray, get_y_coord, min_x, max_x, normalized
     end
 
     @testset "ray" begin
-        T = Float64
         dir = Point2{T}(2, 1)
         dir = normalized(dir)
         r = Ray{T}(Point2{T}(3, 4), dir)

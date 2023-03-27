@@ -1,6 +1,6 @@
 module InnerProductMax
 
-export AbstractInnerProductMax, best_vecs
+export AbstractInnerProductMax, query_all
 abstract type AbstractInnerProductMax{T<:Real} end
 
 include("geo_utils.jl")
@@ -8,7 +8,7 @@ include("distributions_3d.jl")
 include("hull.jl")
 
 """Returns: 3xn"""
-function best_vecs(ds::AbstractInnerProductMax{T}, queries::Matrix{T}) where {T}
+function query_all(ds::AbstractInnerProductMax{T}, queries::Matrix{T}) where {T}
     res = zero(queries)
     for (i, q) in enumerate(eachcol(queries))
         res[:, i] = query(ds, Point3{T}(q))
@@ -17,7 +17,8 @@ function best_vecs(ds::AbstractInnerProductMax{T}, queries::Matrix{T}) where {T}
 end
 
 include("naive.jl")
-include("nesting.jl")
+include("nested.jl")
 include("mine.jl")
+include("plot.jl")
 
 end # module InnerProductMax

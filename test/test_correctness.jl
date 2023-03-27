@@ -1,7 +1,7 @@
 using Random
 using LinearAlgebra
-
-P3 = Point3{Float64}
+using Profile
+using ProfileView
 
 function check_keys(keys::Matrix{T}, returned_keys::Matrix{T}) where {T}
     s = Set{Point3{T}}(Point3{T}.(eachcol(keys)))
@@ -11,7 +11,7 @@ end
 """returns: max dot products, query time"""
 function best_answers_and_query_info(ds::AbstractInnerProductMax{T}, keys::Matrix{T}, queries::Matrix{T}) where {T}
     query_info = @timed(begin
-        returned_keys = best_vecs(ds, queries)
+        returned_keys = query_all(ds, queries)
         0
     end)
     check_keys(keys, returned_keys)
@@ -19,17 +19,33 @@ function best_answers_and_query_info(ds::AbstractInnerProductMax{T}, keys::Matri
 end
 
 """returns: max dot products, preprocess time, query time"""
-function best_answers_and_infos(t::DataType, hull::Hull{T}, keys::Matrix{T}, queries::Matrix{T}) where {T}
-    preprocess_info = @timed(begin
-        ds = t(hull)
-        0
-    end)
+function best_answers_and_infos(t::DataType, hull::Hull{T}, keys::Matrix{T}, queries::Matrix{T}, profile::Bool=false) where {T}
+    # @profview ds = t(hull)
+    # @assert false
+    if t == InnerProductMax.InnerProductMaxNested{T} && profile
+        @profview preprocess_info = @timed(begin
+            ds = t(hull)
+            0
+        end)
+    else
+        preprocess_info = @timed(begin
+            ds = t(hull)
+            0
+        end)
+    end
+    # if t == InnerProductMax.InnerProductMaxNested{T} && profile
+    #     # println("best_answers ", t)
+    #     answers, query_info = best_answers_and_query_info(ds, keys, queries)
+    #     # Profile.print()
+    #     answers, preprocess_info, query_info
+    # else
     answers, query_info = best_answers_and_query_info(ds, keys, queries)
     answers, preprocess_info, query_info
+    # end
 end
 
 function test_point_set(keys::Matrix{T}, queries::Matrix{T}, t1::DataType, t2::DataType) where {T<:Real}
-    hull = Hull{T}(keys)
+    hull = Hull(keys)
     a1, p1, q1 = best_answers_and_infos(t1, hull, keys, queries)
     a2, p2, q2 = best_answers_and_infos(t2, hull, keys, queries)
     @test a1 ≈ a2
@@ -43,20 +59,19 @@ end
 
 """gen: takes as input an integer and outputs some number of points"""
 function test_point_set_gen(gen, n::Int, q::Int, t1::DataType, t2::DataType)
-    keys = gen(n)
-    values = gen(q)
+    keys = gen(T, n)
+    values = gen(T, q)
     # println("TEST $n $q")
     test_point_set(keys, values, t1, t2)
 end
 
+const MAX_N = 10
+
 @testset "InnerProductMax correctness" begin
     """keys: 3xn"""
-
-    MAX_N = 10
-
     function test_tetrahedron(t1::DataType, t2::DataType)
-        keys = tetrahedron()
-        values = cube(10, 100)
+        keys = tetrahedron(T)
+        values = cube(T, 10, 100)
         test_point_set(keys, values, t1, t2)
     end
 
@@ -64,8 +79,8 @@ end
     function test_int_tiny(t1::DataType, t2::DataType)
         d = 1
         for n in 4:MAX_N
-            for rep in 1:100
-                test_point_set_gen(n -> cube(d, n), n, 1000, t1, t2)
+            for _ in 1:100
+                test_point_set_gen((T, n) -> cube(T, d, n), n, 1000, t1, t2)
             end
         end
     end
@@ -73,8 +88,8 @@ end
     function test_int(t1::DataType, t2::DataType)
         for n in 4:MAX_N
             for d in 1:100
-                for rep in 1:3
-                    test_point_set_gen(n -> cube(d, n), n, 1000, t1, t2)
+                for _ in 1:3
+                    test_point_set_gen((T, n) -> cube(T, d, n), n, 1000, t1, t2)
                 end
             end
         end
@@ -82,7 +97,7 @@ end
 
     function test_sphere(t1::DataType, t2::DataType)
         for n in 4:MAX_N
-            for trial in 1:100
+            for _ in 1:100
                 test_point_set_gen(unit_sphere, n, 100, t1, t2)
             end
         end
@@ -96,30 +111,22 @@ end
     end
 
     function sanity_check(t::DataType)
-        keys = tetrahedron()
-        hull = Hull{Float64}(keys)
-        # for simplex in eachcol(hull.simplices)
-        #     println(hull.points[:, simplex[1]])
-        #     println(hull.points[:, simplex[2]])
-        #     println(hull.points[:, simplex[3]])
-        #     println()
-        # end
+        keys = tetrahedron(T)
+        hull = Hull(keys)
         ds = t(hull)
         if t == InnerProductMaxNaive
             @test ds.points == P3[[0.0, 0.0, 0.0], [0.0, 1.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 0.0]]
         end
-        # @testset "Upward" begin
+
         @test InnerProductMax.query(ds, P3(1, 2, 3)) == P3(0, 1, 1)
         @test InnerProductMax.query(ds, P3(3, 1, 2)) == P3(1, 0, 1)
         @test InnerProductMax.query(ds, P3(0, 0, 1)) in [P3(1, 0, 1), P3(0, 1, 1)]
-        # end
-        # @testset "Downward" begin
+
         @test InnerProductMax.query(ds, P3(-1, -1, -1)) == P3(0, 0, 0)
         @test InnerProductMax.query(ds, P3(-1, -2, -3)) == P3(0, 0, 0)
         @test InnerProductMax.query(ds, P3(3, -2, -3)) == P3(1, 1, 0)
         @test InnerProductMax.query(ds, P3(1, -2, -3)) == P3(0, 0, 0)
-        # end
-        # @testset "Best Answers" begin
+
         @test best_answers_and_query_info(ds, keys, vec_to_matrix([
             P3(1, 2, 3),
             P3(-1, -2, -3),
@@ -129,65 +136,65 @@ end
     end
 
     @testset "sanity_check_naive" begin
-        sanity_check(InnerProductMaxNaive{Float64})
+        sanity_check(InnerProductMaxNaive{T})
     end
 
     @testset "sanity_check_mine_treap" begin
-        sanity_check(InnerProductMaxMine{Float64,PointLocationDsTreap})
+        sanity_check(InnerProductMaxMine{T,PointLocationDsTreap})
     end
 
     @testset "sanity_check_mine_rb" begin
-        sanity_check(InnerProductMaxMine{Float64,PointLocationDsRB})
+        sanity_check(InnerProductMaxMine{T,PointLocationDsRB})
     end
 
-    @testset "sanity_check_nesting" begin
-        sanity_check(InnerProductMaxNested{Float64})
+    @testset "sanity_check_nested" begin
+        sanity_check(InnerProductMaxNested{T})
     end
 
     @testset "tiny_treap" begin
-        test_int_tiny(InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsTreap})
+        test_int_tiny(InnerProductMaxNaive{T}, InnerProductMaxMine{T,PointLocationDsTreap})
     end
 
-    @testset "tiny_nesting" begin
-        test_int_tiny(InnerProductMaxNaive{Float64}, InnerProductMaxNested{Float64})
+    @testset "tiny_nested" begin
+        test_int_tiny(InnerProductMaxNaive{T}, InnerProductMaxNested{T})
     end
 
     @testset "small_naive" begin
-        test_all_small(InnerProductMaxNaive{Float64}, InnerProductMaxNaive{Float64})
+        test_all_small(InnerProductMaxNaive{T}, InnerProductMaxNaive{T})
     end
 
     @testset "small_mine_treap" begin
-        test_all_small(InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsTreap})
+        test_all_small(InnerProductMaxNaive{T}, InnerProductMaxMine{T,PointLocationDsTreap})
     end
 
     @testset "small_mine_rb" begin
-        test_all_small(InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsRB})
+        test_all_small(InnerProductMaxNaive{T}, InnerProductMaxMine{T,PointLocationDsRB})
     end
 
-    @testset "small_nesting" begin
-        test_all_small(InnerProductMaxNaive{Float64}, InnerProductMaxNested{Float64})
+    @testset "small_nested" begin
+        test_all_small(InnerProductMaxNaive{T}, InnerProductMaxNested{T})
     end
 
     @testset "tricky_rb" begin # -0. vs 0.
         test_point_set([-1.0 -4.0 -3.0 0.0; -4.0 3.0 2.0 -3.0; 1.0 -4.0 -4.0 -4.0], hcat([0.0, 1.0, -1.0]),
-            InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsRB})
+            InnerProductMaxNaive{T}, InnerProductMaxMine{T,PointLocationDsRB})
     end
 
     @testset "tricky_tiny" begin # -0. vs 0.
         test_point_set([1.0 1.0 -1.0 1.0; -1.0 1.0 0.0 0.0; 1.0 0.0 1.0 1.0], hcat([1.0, -1.0, 1.0]),
-            InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsTreap})
+            InnerProductMaxNaive{T}, InnerProductMaxMine{T,PointLocationDsTreap})
     end
 
     @testset "tricky_treap" begin # parallel rays
         test_point_set([-1.0 -4.0 -3.0 0.0; -4.0 3.0 2.0 -3.0; 1.0 -4.0 -4.0 -4.0], hcat([0.0, 1.0, -1.0]),
-            InnerProductMaxNaive{Float64}, InnerProductMaxMine{Float64,PointLocationDsTreap})
+            InnerProductMaxNaive{T}, InnerProductMaxMine{T,PointLocationDsTreap})
     end
 
-    @testset "tricky_nesting" begin
+    @testset "tricky_nested" begin
         for it in 1:100
-            println(it)
+            # println(it)
             test_point_set([-1.0 1.0 0.0 0.0 -1.0 -1.0; 0.0 1.0 -1.0 -1.0 1.0 0.0; 0.0 1.0 1.0 -1.0 0.0 1.0], hcat([0.0, -1.0, 1.0]),
-            InnerProductMaxNaive{Float64}, InnerProductMaxNested{Float64})
+                InnerProductMaxNaive{T}, InnerProductMaxNested{T})
         end
     end
 end

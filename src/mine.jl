@@ -26,13 +26,13 @@ struct UpperDS{T,P}
             push!(augmented_edges, AugmentedEdge{T}(s, hull.points[:, a], hull.points[:, b]))
         end
 
-        function add_one_way_edge(p1::Point3, p2::Point3, a::V_id, b::V_id)
+        function add_one_way_edge(p1::Point3{T}, p2::Point3{T}, a::V_id, b::V_id)
             # println("One Way ", p1, " ", p2)
             @assert upward(p1) && !upward(p2)
             point_at_infinity = p1[3] * p2 - p2[3] * p1
             point_at_infinity = point_at_infinity ./ norm(point_at_infinity)
             @assert point_at_infinity[3] ≈ 0
-            dir = point_at_infinity[1:2]
+            dir = Point2{T}(point_at_infinity[1:2])
             dir = normalized(dir)
             if dir[1] ≈ 0
                 return

@@ -2,18 +2,68 @@
 
 ## About
 
-Implementations of [this task](https://cstheory.stackexchange.com/questions/34503/maximizing-inner-product) with $d=3$.
+Four different data structures solving [this task](https://cstheory.stackexchange.com/questions/34503/maximizing-inner-product) with $d=3$.
+
+## Usage
+
+### Basic Usage
+
+```julia
+using GeometryBasics, InnerProductMax # this may take a while ...
+const T = Float64
+const P3 = Point3{T}
+
+point_set = tetrahedron(T) # initialize a non-degenerate 3xn point set
+display(point_set) # 3x5
+hull = Hull(point_set) # construct 3D hull
+ds = InnerProductMaxMine{T, PointLocationDsTreap}(hull) # initialize inner product maximization data structure
+display(query_all(ds, vec_to_matrix(P3[P3(3, 1, 2), P3(-3, -1, -2)]))) # query max vector
+# 3×2 Matrix{Float64}:
+#  1.0  0.0
+#  0.0  0.0
+#  1.0  0.0
+```
+
+### Interactive Plot
+
+This will open a new window.
+
+```julia
+using InnerProductMax
+const T = Float64
+
+point_set = unit_sphere(T, 50)
+make_interactive_plot(InnerProductMaxMine{T, PointLocationDsTreap}, point_set) # initializing GLMakie may take a while ...
+```
+
+Example:
+
+![](assets/vis_sphere_50.png)
+
+
+### Subclasses of `AbstractInnerProductMax{T}`
+
+Listed from best to worst complexity.
+
+| Subclass                                      | Preprocessing Time | Preprocessing Memory | Query Time  |
+| --------------------------------------------- | ------------------ | -------------------- | ----------- |
+| InnerProductMaxNaive{T}                       | $O(N)$             | $O(N)$               | $O(N)$      |
+| InnerProductMaxMine{T,PointLocationDsTreap}   | $O(N\log N)$       | $O(N\log N)$         | $O(\log N)$ |
+| InnerProductMaxMine{T,PointLocationDsRB}      | $O(N\log N)$       | $O(N)$               | $O(\log N)$ |
+| InnerProductMaxNested{T}                      | $O(N)$             | $O(N)$               | $O(\log N)$ |
+ 
+In practice, for a hull of size $N\approx 10^5$, `InnerProductMaxMine{T,PointLocationDsTreap}` is the fastest in terms of query time, while `InnerProductMaxMine{T,PointLocationDsRB}` has slightly lower preprocessing time and memory but slightly larger query time.
 
 ## Dev Instructions
 
-Add these to `startup.jl`: `using Revise, ReTest`. Then run these commands from the repo root:
+Add these to `startup.jl`: `using Revise, ReTest`. Run these commands from the repo root to execute all tests:
 
 ```
 julia --project
 include("test/InnerProductMaxTests.jl"); retest()
 ```
 
-## Table Generation
+## Performance Tests 
 
 ```
 include("test/InnerProductMaxTests.jl"); retest("sphere_perf")
@@ -41,7 +91,7 @@ Results:
 
 Red-black tree (memory is worse for some reason ...)
 
-```py
+```
        N      Q                                             Method  Preproc Time (s)  Preproc Memory (MB)  Query Time (s)
 0   1000   1000                                     Naive{Float64}          0.000030             0.088208        0.001731
 1   1000   1000  Mine{Float64, InnerProductMax.PLRB.PointLocati...          0.836934            30.685142        0.002265
@@ -112,3 +162,11 @@ Level Nesting:
 8  20000  20000   Naive{Float64}          0.001400             1.760208        0.828003
 9  20000  20000  Nested{Float64}         14.881884          1451.676352        4.268223
 ```
+
+## TODOs
+
+ - do more profiling
+ - remove Dict from subhull? idk if that will be faster
+ - polish docs + performance tests
+ - generate more interesting point distributions?
+ - make visualization work for larger number of points?

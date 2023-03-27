@@ -14,22 +14,27 @@ Edelsbrunner (1987, Section 9.5.3);
 Computational Geometry in C 7.10.5
 """
 struct InnerProductMaxNested{T} <: AbstractInnerProductMax{T}
-    hull::Hull{T}
     levels::Vector{NestedLevel{T}}
     last_level::Level2D{T}
     function InnerProductMaxNested{T}(hull::Hull{T}) where {T}
-        cur_subhull = Subhull{T}(hull.points, hull.simplices)
+        n = size(hull.points, 2)
+        old_to_new = zeros(V_id, n)
+        for (i, v) in enumerate(hull.vertices)
+            old_to_new[v] = i
+        end
+        cur_subhull = Subhull(Point3.(eachcol(hull.points[:, hull.vertices])), old_to_new[hull.simplices])
         levels = NestedLevel{T}[]
         while true
             # println(length(vertices(cur_subhull)))
-            span = compute_span(hull.points[:, Int.(vertices(cur_subhull))])
+            span, _ = compute_span(cur_subhull.points)
             if length(span) < 4
                 @assert length(span) == 3
                 last_level = Level2D{T}(cur_subhull)
-                return new(hull, levels, last_level)
+                return new(levels, last_level)
             end
-            push!(levels, NestedLevel{T}(cur_subhull))
-            cur_subhull = levels[end].inner_subhull
+            nested_level, inner_subhull = make_nested_level(cur_subhull)
+            push!(levels, nested_level)
+            cur_subhull = inner_subhull
         end
     end
 end
@@ -41,18 +46,8 @@ function query(ds::InnerProductMaxNested{T}, p::Point3{T}) where {T}
     z_dir = normalized(p)
     x_dir = rand_perp(z_dir)
     l, m, r = init_triple(ds.last_level, z_dir, x_dir)
-    # println("AA ", typeof(l))
-    # println("LEN ", length(ds.levels))
-    # println(ds.hull.points)
-    # println("start query")
-    # println("init ", l, " ", m, " ", r)
-    # println("z_dir = ", z_dir, " x_dir = ", x_dir)
     for level in 0:length(ds.levels)-1
-        # println("before ", vertices(ds.levels[end-level].inner_subhull))
         l, m, r = advance(ds.levels[end-level], z_dir, x_dir, l, m, r)
-        # println("after ", vertices(ds.levels[end-level].outer_subhull))
-        # println("advance ", l, " ", m, " ", r)
     end
-    # println("DONE")
-    point(ds.levels[1].outer_subhull, m)
+    ds.levels[1].outer_subhull.points[m]
 end
