@@ -1,6 +1,6 @@
 # https://github.com/MakieOrg/Makie.jl/issues/797
 using GLMakie
-using Polyhedra: Mesh, polyhedron
+using Polyhedra: Mesh, polyhedron, vrep
 using LazySets: Hyperplane, BallInf, intersection, translate, plot3d!
 using InnerProductMax
 

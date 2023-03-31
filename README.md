@@ -26,7 +26,7 @@ display(query_all(ds, vec_to_matrix(P3[P3(3, 1, 2), P3(-3, -1, -2)]))) # query m
 
 ### Interactive Plot
 
-This will open a new window.
+This should open in a separate window.
 
 ```julia
 using InnerProductMax
@@ -38,7 +38,7 @@ point_set = unit_sphere(T, 10)
 plot_point_location_interactive(InnerProductMaxMine{T, PointLocationDsTreap}, point_set) 
 ```
 
-Example:
+`plot_3d_hull_interactive` displays only the polyhedron, whereas `plot_point_location_interactive` displays both the polyhedron and the planar subdivision (available when `InnerProductMaxMine` is used).
 
 ![](assets/vis_iprod1.png)
 
@@ -64,7 +64,7 @@ Add these to `startup.jl`: `using Revise, ReTest, TestEnv`. Run these commands f
 ```
 julia --project
 TestEnv.activate() do 
-       include("test/InnerProductMaxTests.jl"); retest("correctness")
+       include("test/InnerProductMaxTests.jl"); retest()
 end
 ```
 
