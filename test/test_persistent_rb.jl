@@ -1,6 +1,5 @@
 @testset "persistent_rb" begin
-    using InnerProductMax.PersistentRB
-    using InnerProductMax.PersistentRB: tour as tour_rb
+    using InnerProductMax.PersistentRB: RBNode, insert_root, delete_root, tour as tour_rb
 
     @testset "persistent_rb_insert_root" begin
         root0::RBNode{T,Int} = nothing

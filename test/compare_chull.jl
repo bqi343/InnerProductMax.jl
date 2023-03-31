@@ -1,5 +1,6 @@
 # https://juliapolyhedra.github.io/
-using Polyhedra, CDDLib, QHull
+using CDDLib, QHull
+using Polyhedra: Polyhedra, polyhedron, vrep
 using InnerProductMax: HullLite
 
 const libs = [Polyhedra.default_library(3, T), CDDLib.Library(:float), QHull.Library()]

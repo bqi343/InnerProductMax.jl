@@ -12,18 +12,22 @@ end
 """Answers maximum inner product queries in the upper half-plane."""
 struct UpperDS{T,P}
     pl_ds::P
+    all_augmented_edges::Vector{AugmentedEdge{T}} # for visualization purposes
     function UpperDS{T,P}(hull::Hull{T}) where {T,P}
         # iterate over upward-pointing facets
+        all_augmented_edges = AugmentedEdge{T}[]
         augmented_edges = AugmentedEdge{T}[]
 
         function add_two_way_edge(p1::Point2{T}, p2::Point2{T}, a::V_id, b::V_id)
-            if !(p1[1] < p2[1]) || p1[1] ≈ p2[1]
+            push!(all_augmented_edges, AugmentedEdge{T}(Segment{T}(p1, p2, false), hull.points[:, a], hull.points[:, b]))
+            if !(p1[1] < p2[1])
+                p1, p2 = p2, p1
+                a, b = b, a
+            end
+            if p1[1] ≈ p2[1] # vertical
                 return
             end
-            # println("Adding Two-Way Edge $(p1) $(p2) $(hull.points[:, a]) $(hull.points[:, b])")
-            s = Segment{T}(p1, p2)
-            # println("Seg ", s)
-            push!(augmented_edges, AugmentedEdge{T}(s, hull.points[:, a], hull.points[:, b]))
+            push!(augmented_edges, AugmentedEdge{T}(Segment{T}(p1, p2), hull.points[:, a], hull.points[:, b]))
         end
 
         function add_one_way_edge(p1::Point3{T}, p2::Point3{T}, a::V_id, b::V_id)
@@ -34,14 +38,13 @@ struct UpperDS{T,P}
             @assert point_at_infinity[3] ≈ 0
             dir = Point2{T}(point_at_infinity[1:2])
             dir = normalized(dir)
-            if dir[1] ≈ 0
+            push!(all_augmented_edges, AugmentedEdge{T}(Ray{T}(extract_2d(p1), Point2{T}(dir), false), hull.points[:, a], hull.points[:, b]))
+            if dir[1] ≈ 0 # vertical
                 return
             elseif dir[1] < 0
                 a, b = b, a
             end
-            r = Ray{T}(extract_2d(p1), Point2{T}(dir))
-            # println("Ray ", r)
-            push!(augmented_edges, AugmentedEdge{T}(r, hull.points[:, a], hull.points[:, b]))
+            push!(augmented_edges, AugmentedEdge{T}(Ray{T}(extract_2d(p1), Point2{T}(dir)), hull.points[:, a], hull.points[:, b]))
         end
 
         for i in 1:size(hull.simplices, 2)
@@ -53,14 +56,16 @@ struct UpperDS{T,P}
                     adj_simplex = hull.adj_simplices[j, i]
                     adj_facet = Point3(hull.facets[1:3, adj_simplex])
                     if upward(adj_facet)
-                        add_two_way_edge(extract_2d(cur_facet), extract_2d(adj_facet), a, b)
+                        if i < adj_simplex
+                            add_two_way_edge(extract_2d(cur_facet), extract_2d(adj_facet), a, b)
+                        end
                     else
                         add_one_way_edge(cur_facet, adj_facet, a, b)
                     end
                 end
             end
         end
-        new{T,P}(P{T}(augmented_edges))
+        new{T,P}(P{T}(augmented_edges), all_augmented_edges)
     end
 end
 

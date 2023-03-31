@@ -1,4 +1,5 @@
-using Random, Pandas
+using Random
+using Pandas: DataFrame
 
 """Returns a Pandas DataFrame comparing the implementations wrt time and memory"""
 function sphere_perf(t1::DataType, t2::DataType, nqs::Vector{Tuple{Int,Int}})

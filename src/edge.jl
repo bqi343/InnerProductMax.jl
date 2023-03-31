@@ -4,8 +4,8 @@ abstract type Edge{T} end
 struct Segment{T} <: Edge{T}
     l::Point2{T}
     r::Point2{T}
-    function Segment{T}(l::Point2{T}, r::Point2{T}) where {T}
-        if !(l[1] < r[1])
+    function Segment{T}(l::Point2{T}, r::Point2{T}, strict::Bool=true) where {T}
+        if strict && !(l[1] < r[1])
             throw(DomainError("cannot construct segment not pointing to left"))
         end
         new{T}(l, r)
@@ -14,15 +14,14 @@ end
 
 min_x(s::Segment) = s.l[1]
 max_x(s::Segment) = s.r[1]
-function get_y_coord(s::Segment{T}, x::T) where {T}
-    ((x - s.l[1]) * s.r[2] + (s.r[1] - x) * s.l[2]) / (s.r[1] - s.l[1])
-end
+get_y_coord(s::Segment{T}, x::T) where {T} = ((x - s.l[1]) * s.r[2] + (s.r[1] - x) * s.l[2]) / (s.r[1] - s.l[1])
+endpoints(s::Segment) = (s.l, s.r)
 
 struct Ray{T} <: Edge{T}
     start::Point2{T}
     dir::Point2{T}
-    function Ray{T}(start::Point2{T}, dir::Point2{T}) where {T}
-        if dir[1] ≈ 0
+    function Ray{T}(start::Point2{T}, dir::Point2{T}, strict::Bool=true) where {T}
+        if strict && dir[1] ≈ 0
             throw(DomainError("ray cannot be vertical"))
         end
         @assert norm(dir) ≈ 1 "expected dir to be normalized"
@@ -30,18 +29,19 @@ struct Ray{T} <: Edge{T}
     end
 end
 
-min_x(s::Ray) =
-    if s.dir[1] < 0
+min_x(r::Ray) =
+    if r.dir[1] < 0
         -Inf
     else
-        s.start[1]
+        r.start[1]
     end
-max_x(s::Ray) =
-    if s.dir[1] > 0
+max_x(r::Ray) =
+    if r.dir[1] > 0
         Inf
     else
-        s.start[1]
+        r.start[1]
     end
+endpoints(r::Ray) = (r.start, r.start + r.dir * 100)
 
 get_y_coord(r::Ray{T}, x::T) where {T} = r.start[2] + (x - r.start[1]) / r.dir[1] * r.dir[2]
 

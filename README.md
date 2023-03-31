@@ -30,16 +30,19 @@ This will open a new window.
 
 ```julia
 using InnerProductMax
-const T = Float64
 
-point_set = unit_sphere(T, 50)
-make_interactive_plot(InnerProductMaxMine{T, PointLocationDsTreap}, point_set) # initializing GLMakie may take a while ...
+const T = Float64
+# point_set = tetrahedron(T)
+point_set = unit_sphere(T, 10)
+# plot_3d_hull_interactive(InnerProductMaxMine{T, PointLocationDsTreap}, point_set)
+plot_point_location_interactive(InnerProductMaxMine{T, PointLocationDsTreap}, point_set) 
 ```
 
 Example:
 
-![](assets/vis_sphere_50.png)
+![](assets/vis_iprod1.png)
 
+![](assets/vis_iprod2.png)
 
 ### Subclasses of `AbstractInnerProductMax{T}`
 
@@ -60,9 +63,8 @@ Add these to `startup.jl`: `using Revise, ReTest, TestEnv`. Run these commands f
 
 ```
 julia --project
-TestEnv.activate() do
-    include("test/InnerProductMaxTests.jl"); retest()
-    retest()
+TestEnv.activate() do 
+       include("test/InnerProductMaxTests.jl"); retest("correctness")
 end
 ```
 

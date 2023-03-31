@@ -51,3 +51,10 @@ function rand_perp(p::Point3)
     dir = dir - dot(dir, p) * p
     normalized(dir)
 end
+
+
+"""points: 3 x n
+
+returns: max(x span, y span, z span)
+"""
+diameter(points::AbstractMatrix{T}) where {T} = maximum(maximum.(eachrow(points)) .- minimum.(eachrow(points)))
