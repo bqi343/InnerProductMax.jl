@@ -26,7 +26,7 @@ display(query_all(ds, vec_to_matrix(P3[P3(3, 1, 2), P3(-3, -1, -2)]))) # query m
 
 ### Interactive Plot
 
-This should open in a separate window.
+This should open in a separate window after a while.
 
 ```julia
 using InnerProductMax
@@ -43,6 +43,24 @@ plot_point_location_interactive(InnerProductMaxMine{T, PointLocationDsTreap}, po
 ![](assets/vis_iprod1.png)
 
 ![](assets/vis_iprod2.png)
+
+#### Troubleshooting
+
+If you're having trouble seeing the plots or want a sanity check that `GLMakie` is working, try running the following code (e.g., by starting Julia from the Mac Terminal app and pasting in the lines):
+
+```julia
+# source: https://github.com/MakieOrg/Makie.jl/issues/797
+using GLMakie
+
+xy = rand(Point2f, 10)
+colors = rand(10)
+points_node = Observable(xy)
+scene = scatter(points_node, color=colors)
+```
+
+Expected Output:
+
+![](assets/scatter.png)
 
 ### Subclasses of `AbstractInnerProductMax{T}`
 
